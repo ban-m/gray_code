@@ -27,7 +27,7 @@ pub struct GrayCodeIterator {
 
 impl GrayCodeIterator {
     fn new(GrayCode { length }: GrayCode) -> Self {
-xc        Self {
+        Self {
             length,
             current_code: 1,
             current_index: 0,

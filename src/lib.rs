@@ -9,11 +9,30 @@ impl GrayCode {
     }
 }
 
+#[derive(Debug, Clone, Copy)]
+pub struct GrayCodeFlip {
+    length: u64,
+}
+
+impl GrayCodeFlip {
+    pub fn new(length: u64) -> Self {
+        Self { length }
+    }
+}
+
 impl std::iter::IntoIterator for GrayCode {
     type Item = u64;
     type IntoIter = GrayCodeIterator;
     fn into_iter(self) -> Self::IntoIter {
         GrayCodeIterator::new(self)
+    }
+}
+
+impl std::iter::IntoIterator for GrayCodeFlip {
+    type Item = usize;
+    type IntoIter = GrayCodeFlipIterator;
+    fn into_iter(self) -> Self::IntoIter {
+        GrayCodeFlipIterator::new(self)
     }
 }
 
@@ -36,6 +55,23 @@ impl GrayCodeIterator {
     }
 }
 
+#[derive(Debug, Clone)]
+pub struct GrayCodeFlipIterator {
+    length: u64,
+    current_index: u64,
+    max_index: u64,
+}
+
+impl GrayCodeFlipIterator {
+    fn new(GrayCodeFlip { length }: GrayCodeFlip) -> Self {
+        Self {
+            length,
+            current_index: 0,
+            max_index: 1 << length,
+        }
+    }
+}
+
 impl std::iter::Iterator for GrayCodeIterator {
     type Item = u64;
     fn next(&mut self) -> Option<Self::Item> {
@@ -46,6 +82,21 @@ impl std::iter::Iterator for GrayCodeIterator {
             self.current_code = self.current_code ^ (1 << flip_bit_location);
             self.current_index += 1;
             Some(self.current_code)
+        } else {
+            None
+        }
+    }
+}
+
+impl std::iter::Iterator for GrayCodeFlipIterator {
+    type Item = usize;
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.length == 0 {
+            None
+        } else if self.current_index < self.max_index {
+            let flip_bit_location = self.current_index.max(1).trailing_zeros();
+            self.current_index += 1;
+            Some(flip_bit_location as usize)
         } else {
             None
         }
@@ -91,6 +142,19 @@ mod tests {
         assert_eq!(gc.next(), Some(0b111));
         assert_eq!(gc.next(), Some(0b101));
         assert_eq!(gc.next(), Some(0b100));
+        assert_eq!(gc.next(), None);
+    }
+    #[test]
+    fn three_dig_iter() {
+        let mut gc = GrayCodeFlip::new(3).into_iter();
+        assert_eq!(gc.next(), Some(0)); // This behavior might change in later versions.
+        assert_eq!(gc.next(), Some(0));
+        assert_eq!(gc.next(), Some(1));
+        assert_eq!(gc.next(), Some(0));
+        assert_eq!(gc.next(), Some(2));
+        assert_eq!(gc.next(), Some(0));
+        assert_eq!(gc.next(), Some(1));
+        assert_eq!(gc.next(), Some(0));
         assert_eq!(gc.next(), None);
     }
     #[test]
